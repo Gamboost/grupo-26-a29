@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Azarclub</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #0e0e0e;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    #content {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 20px;
+      width: 100%;
+      max-width: 640px;
+    }
+
+    .logo {
+      max-width: 220px;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    h1 {
+      font-size: 2.6rem;
+      animation: fadeIn 1.2s ease-in-out;
+    }
+
+    p.lead {
+      color: #9aa0ad;
+      font-size: 1.1rem;
+      max-width: 520px;
+      animation: fadeIn 1.4s ease-in-out;
+    }
+
+    .options-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: fadeIn 1.6s ease-in-out;
+    }
+
+    .call-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14);
+    }
+
+    .button-grid {
+      display: grid;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    @media (min-width: 540px) {
+      .button-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .whatsapp-button {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      padding: 16px;
+      border-radius: 10px;
+      background: linear-gradient(140deg, rgba(0, 255, 213, 0.2), rgba(0, 102, 255, 0.18));
+      border: 1px solid rgba(0, 255, 213, 0.35);
+      color: #fff;
+      text-decoration: none;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .whatsapp-button:hover {
+      transform: translateY(-2px);
+      border-color: #00ffd5;
+      box-shadow: 0 8px 18px rgba(0, 255, 213, 0.2);
+    }
+
+    .button-label {
+      font-weight: 600;
+      font-size: 1.05rem;
+    }
+
+    .button-phone {
+      color: #9aa0ad;
+      font-size: 0.9rem;
+    }
+
+    .empty-state {
+      color: #8c93a3;
+      font-size: 0.95rem;
+      padding: 18px 0;
+    }
+
+    #loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #0e0e0e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      gap: 20px;
+      z-index: 999;
+    }
+
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border-left-color: #ff4500;
+      animation: spin 1s linear infinite;
+    }
+
+    .admin-access {
+      position: fixed;
+      bottom: 18px;
+      right: 22px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: none;
+      background: radial-gradient(circle at center, rgba(0, 255, 213, 0.45) 0%, rgba(0, 255, 213, 0) 70%);
+      opacity: 0.08;
+      cursor: pointer;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .admin-access:hover,
+    .admin-access:focus-visible {
+      opacity: 0.5;
+      transform: scale(1.1);
+      outline: none;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(14, 14, 14, 0.92);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      z-index: 1000;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 540px;
+      background: #151515;
+      border: 1px solid rgba(0, 255, 213, 0.25);
+      border-radius: 14px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-height: 92vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .modal-header h3 {
+      font-size: 1.4rem;
+    }
+
+    .modal-close {
+      border: none;
+      background: transparent;
+      color: #9aa0ad;
+      font-size: 1.8rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: #ffffff;
+    }
+
+    .modal-form label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.9rem;
+      color: #9aa0ad;
+      text-align: left;
+    }
+
+    .modal-form input,
+    .modal-form textarea {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #ffffff;
+      font: inherit;
+    }
+
+    .modal-form textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .modal-actions button {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+      color: #ffffff;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .modal-actions button.primary {
+      background: linear-gradient(140deg, rgba(0, 255, 213, 0.35), rgba(0, 102, 255, 0.3));
+      border-color: rgba(0, 255, 213, 0.6);
+      color: #0b2122;
+      font-weight: 600;
+    }
+
+    .modal-actions button:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .modal-actions button.primary:hover {
+      background: linear-gradient(140deg, rgba(0, 255, 213, 0.6), rgba(0, 102, 255, 0.45));
+    }
+
+    .modal-error {
+      color: #ff6b6b;
+      font-size: 0.85rem;
+      min-height: 18px;
+      text-align: left;
+    }
+
+    .admin-note {
+      font-size: 0.8rem;
+      color: #7c8394;
+      text-align: left;
+      margin-top: -8px;
+    }
+
+    .admin-contact-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .admin-contact {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    @media (min-width: 540px) {
+      .admin-contact {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+        align-items: end;
+      }
+    }
+
+    .admin-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .admin-field span {
+      font-size: 0.8rem;
+      color: #8c93a3;
+    }
+
+    .admin-contact-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .admin-contact-actions button {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+      color: #ff8888;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    .admin-contact-actions button:hover {
+      background: rgba(255, 136, 136, 0.15);
+      border-color: rgba(255, 136, 136, 0.4);
+    }
+
+    .admin-add-contact {
+      align-self: flex-start;
+      margin-top: 10px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 255, 213, 0.4);
+      background: rgba(0, 255, 213, 0.12);
+      color: #00ffd5;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .admin-add-contact:hover {
+      background: rgba(0, 255, 213, 0.22);
+      border-color: #00ffd5;
+    }
+
+    .admin-add-contact[disabled] {
+      opacity: 0.35;
+      cursor: not-allowed;
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div id="loader">
+    <div class="spinner"></div>
+    <p>Cargando Azarclub...</p>
+  </div>
+
+  <div id="content">
+    <img class="logo" src="logo.png" alt="Azarclub Logo" />
+    <h1>Azarclub</h1>
+    <p class="lead">Contacta al equipo en WhatsApp desde los enlaces disponibles.</p>
+    <div class="options-container" id="options-container"></div>
+    <button
+      id="admin-access"
+      class="admin-access hidden"
+      type="button"
+      aria-label="Abrir panel administrativo">
+      <span class="visually-hidden">Acceso administrativo</span>
+    </button>
+  </div>
+
+  <div id="admin-overlay" class="modal-backdrop hidden">
+    <div id="admin-login" class="modal-card hidden">
+      <div class="modal-header">
+        <h3>Acceso Administrativo</h3>
+        <button type="button" class="modal-close" data-action="close-admin" aria-label="Cerrar">&times;</button>
+      </div>
+      <p>Introduce tus credenciales para editar los datos de WhatsApp.</p>
+      <form id="admin-login-form" class="modal-form">
+        <label for="admin-username">
+          Usuario
+          <input id="admin-username" type="text" autocomplete="username" />
+        </label>
+        <label for="admin-password">
+          Contrasena
+          <input id="admin-password" type="password" autocomplete="current-password" />
+        </label>
+        <p class="modal-error" id="admin-login-error"></p>
+        <div class="modal-actions">
+          <button type="submit" class="primary">Ingresar</button>
+          <button type="button" data-action="close-admin">Cancelar</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="admin-panel" class="modal-card hidden">
+      <div class="modal-header">
+        <h3>Configuracion de Contactos</h3>
+        <button type="button" class="modal-close" data-action="close-admin" aria-label="Cerrar">&times;</button>
+      </div>
+      <form id="admin-panel-form" class="modal-form">
+        <label for="admin-prefill-message">
+          Mensaje prefijado
+          <textarea id="admin-prefill-message" placeholder="Hola, me contacto desde Azarclub - {{call}}"></textarea>
+        </label>
+        <p class="admin-note">Configura hasta 10 contactos. Puedes usar {{label}} en el mensaje para insertar el nombre del boton.</p>
+        <div class="admin-contact-list" id="admin-contact-list"></div>
+        <button type="button" class="admin-add-contact" data-action="add-contact">Agregar numero</button>
+        <p class="modal-error" id="admin-panel-error"></p>
+        <div class="modal-actions">
+          <button type="submit" class="primary">Guardar cambios</button>
+          <button type="button" data-action="cancel-admin">Cancelar</button>
+          <button type="button" data-action="reset-admin">Restablecer predeterminado</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const CONFIG_KEY = 'azarclub-config-v1';
+    const ADMIN_USERNAME = 'admin';
+    const ADMIN_PASSWORD = 'azarclub2024';
+    const DEFAULT_CONFIG = {
+      messageTemplate: 'Hola, me contacto desde Azarclub',
+      contacts: [
+        { label: 'Agente Laura', phone: '573001234567', display: '+57 300 123 4567' },
+        { label: 'Agente Omar', phone: '573002345678', display: '+57 300 234 5678' },
+        { label: 'Caja 1', phone: '573003456789', display: '+57 300 345 6789' },
+        { label: 'Soporte Ana', phone: '573005678901', display: '+57 300 567 8901' }
+      ]
+    };
+
+    const MAX_CONTACTS = 10;
+
+    let appConfig = loadConfig();
+    let workingConfig = null;
+    let adminAuthenticated = false;
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const loader = document.getElementById('loader');
+        if (loader) {
+          loader.classList.add('hidden');
+        }
+        const content = document.getElementById('content');
+        if (content) {
+          content.style.display = 'flex';
+        }
+        const adminButton = document.getElementById('admin-access');
+        if (adminButton) {
+          adminButton.classList.remove('hidden');
+        }
+        renderSelectedCall();
+      }, 1500);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      setupAdminControls();
+      renderSelectedCall();
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        const overlay = document.getElementById('admin-overlay');
+        if (overlay && !overlay.classList.contains('hidden')) {
+          closeAdminModal();
+        }
+      }
+    });
+
+    function loadConfig() {
+      try {
+        const stored = localStorage.getItem(CONFIG_KEY);
+        if (stored) {
+          return normalizeConfig(JSON.parse(stored));
+        }
+      } catch (error) {
+        console.warn('No se pudo cargar la configuracion almacenada:', error);
+      }
+      return cloneDefaultConfig();
+    }
+
+    function saveConfig() {
+      try {
+        localStorage.setItem(CONFIG_KEY, JSON.stringify(appConfig));
+      } catch (error) {
+        console.warn('No se pudo guardar la configuracion:', error);
+      }
+    }
+
+    function cloneDefaultConfig() {
+      return deepClone(DEFAULT_CONFIG);
+    }
+
+    function deepClone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function normalizeConfig(raw) {
+      const base = raw && typeof raw === 'object' ? raw : {};
+      const normalized = {
+        messageTemplate: typeof base.messageTemplate === 'string' && base.messageTemplate.trim()
+          ? base.messageTemplate
+          : DEFAULT_CONFIG.messageTemplate,
+        contacts: []
+      };
+
+      if (Array.isArray(base.contacts)) {
+        normalized.contacts = normalizeContacts(base.contacts);
+      } else if (Array.isArray(base.calls) && base.calls.length) {
+        const merged = [];
+        base.calls.forEach(call => {
+          if (Array.isArray(call.contacts) && call.contacts.length) {
+            merged.push(...normalizeContacts(call.contacts));
+          } else if (Array.isArray(call.numbers) && call.numbers.length) {
+            merged.push(...normalizeContacts(call.numbers));
+          }
+        });
+        normalized.contacts = merged.slice(0, MAX_CONTACTS);
+      }
+
+      if (!normalized.contacts.length) {
+        normalized.contacts = deepClone(DEFAULT_CONFIG.contacts);
+      }
+
+      normalized.contacts = normalized.contacts.slice(0, MAX_CONTACTS);
+
+      return normalized;
+    }
+
+    function normalizeContacts(list) {
+      if (!Array.isArray(list)) {
+        return [];
+      }
+
+      return list.map(contact => {
+        const rawPhone = contact && (contact.phone || contact.number) ? String(contact.phone || contact.number) : '';
+        const cleanPhone = rawPhone.replace(/\D+/g, '');
+        return {
+          label: contact && (contact.label || contact.name) ? String(contact.label || contact.name).trim() || 'Contacto' : 'Contacto',
+          phone: cleanPhone,
+          display: contact && (contact.display || contact.displayName) ? String(contact.display || contact.displayName).trim() : ''
+        };
+      }).filter(contact => contact.phone).slice(0, MAX_CONTACTS);
+    }
+
+    function renderSelectedCall() {
+      const container = document.getElementById('options-container');
+      if (!container) {
+        return;
+      }
+
+      const contacts = getValidContacts();
+      if (!contacts.length) {
+        container.innerHTML = '<div class="call-card"><p class="empty-state">Agrega numeros desde la configuracion administrativa.</p></div>';
+        return;
+      }
+
+      container.innerHTML = createContactCard(contacts);
+    }
+
+    function createContactCard(contacts) {
+      const template = (appConfig.messageTemplate || DEFAULT_CONFIG.messageTemplate || '').trim();
+
+      const buttonsHtml = contacts.map(contact => {
+        const cleanPhone = String(contact && contact.phone ? contact.phone : '').replace(/\D+/g, '');
+        if (!cleanPhone) {
+          return '';
+        }
+        const display = contact.display && contact.display.trim()
+          ? contact.display.trim()
+          : formatPhone(cleanPhone);
+        const label = contact.label && contact.label.trim() ? contact.label.trim() : 'Contacto';
+        const message = encodeURIComponent(replaceCallPlaceholder(template, label));
+        return (
+          '<a class="whatsapp-button" href="https://wa.me/' + cleanPhone + '?text=' + message + '" target="_blank" rel="noopener">' +
+            '<span class="button-label">' + escapeHtml(label) + '</span>' +
+            '<span class="button-phone">' + escapeHtml(display) + '</span>' +
+          '</a>'
+        );
+      }).filter(Boolean).join('');
+
+      if (!buttonsHtml) {
+        return '<div class="call-card"><p class="empty-state">Agrega numeros desde la configuracion administrativa.</p></div>';
+      }
+
+      return (
+        '<div class="call-card">' +
+          '<div class="button-grid">' +
+            buttonsHtml +
+          '</div>' +
+        '</div>'
+      );
+    }
+
+    function getValidContacts() {
+      if (!appConfig || !Array.isArray(appConfig.contacts)) {
+        return [];
+      }
+      return normalizeContacts(appConfig.contacts);
+    }
+
+    function replaceCallPlaceholder(template, contactLabel) {
+      return String(template || '')
+        .replace(/{{\s*call\s*}}/gi, contactLabel || '')
+        .replace(/{{\s*label\s*}}/gi, contactLabel || '');
+    }
+
+    function formatPhone(phone) {
+      if (!phone) {
+        return '';
+      }
+      return phone.startsWith('+') ? phone : '+' + phone;
+    }
+
+    function escapeHtml(value) {
+      if (value === null || value === undefined) {
+        return '';
+      }
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function setupAdminControls() {
+      const adminButton = document.getElementById('admin-access');
+      if (adminButton) {
+        adminButton.addEventListener('click', openAdminLogin);
+      }
+
+      const loginForm = document.getElementById('admin-login-form');
+      if (loginForm) {
+        loginForm.addEventListener('submit', handleLoginSubmit);
+      }
+
+      const overlay = document.getElementById('admin-overlay');
+      if (overlay) {
+        overlay.addEventListener('click', event => {
+          if (event.target === overlay) {
+            closeAdminModal();
+          }
+        });
+      }
+
+      const panelForm = document.getElementById('admin-panel-form');
+      if (panelForm) {
+        panelForm.addEventListener('submit', handleAdminSave);
+        panelForm.addEventListener('click', handleAdminPanelClick);
+      }
+    }
+
+    function openAdminLogin() {
+      if (adminAuthenticated) {
+        openAdminPanel();
+        return;
+      }
+      showAdminOverlay('admin-login');
+      const loginForm = document.getElementById('admin-login-form');
+      if (loginForm) {
+        loginForm.reset();
+      }
+      const error = document.getElementById('admin-login-error');
+      if (error) {
+        error.textContent = '';
+      }
+      setTimeout(() => {
+        const userInput = document.getElementById('admin-username');
+        if (userInput) {
+          userInput.focus();
+        }
+      }, 50);
+    }
+
+    function handleLoginSubmit(event) {
+      event.preventDefault();
+      const username = document.getElementById('admin-username') ? document.getElementById('admin-username').value.trim() : '';
+      const password = document.getElementById('admin-password') ? document.getElementById('admin-password').value.trim() : '';
+      const error = document.getElementById('admin-login-error');
+      if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+        adminAuthenticated = true;
+        if (error) {
+          error.textContent = '';
+        }
+        openAdminPanel();
+      } else {
+        if (error) {
+          error.textContent = 'Credenciales invalidas.';
+        }
+      }
+    }
+
+    function openAdminPanel() {
+      workingConfig = deepClone(appConfig);
+      renderAdminForm(workingConfig);
+      const error = document.getElementById('admin-panel-error');
+      if (error) {
+        error.textContent = '';
+      }
+      showAdminOverlay('admin-panel');
+    }
+
+    function showAdminOverlay(sectionId) {
+      const overlay = document.getElementById('admin-overlay');
+      const login = document.getElementById('admin-login');
+      const panel = document.getElementById('admin-panel');
+      if (overlay) {
+        overlay.classList.remove('hidden');
+      }
+      if (login) {
+        login.classList.add('hidden');
+      }
+      if (panel) {
+        panel.classList.add('hidden');
+      }
+      const target = document.getElementById(sectionId);
+      if (target) {
+        target.classList.remove('hidden');
+        target.scrollTop = 0;
+      }
+    }
+
+    function renderAdminForm(source) {
+      const data = source && typeof source === 'object' ? source : workingConfig || cloneDefaultConfig();
+      const messageField = document.getElementById('admin-prefill-message');
+      if (messageField) {
+        messageField.value = data.messageTemplate || DEFAULT_CONFIG.messageTemplate;
+      }
+
+      const contactList = document.getElementById('admin-contact-list');
+      if (!contactList) {
+        return;
+      }
+
+      const contacts = Array.isArray(data.contacts) && data.contacts.length
+        ? data.contacts.slice(0, MAX_CONTACTS)
+        : [{ label: '', phone: '', display: '' }];
+
+      contactList.innerHTML = '';
+      contacts.forEach(contact => {
+        addContactRow(contactList, contact, { focus: false });
+      });
+
+      if (!contactList.querySelector('.admin-contact')) {
+        addContactRow(contactList, { label: '', phone: '', display: '' }, { focus: false });
+      }
+
+      updateAddContactState();
+
+      const panel = document.getElementById('admin-panel');
+      if (panel) {
+        panel.scrollTop = 0;
+      }
+    }
+
+    function createContactRow(contact) {
+      const contactData = contact && typeof contact === 'object' ? contact : { label: '', phone: '', display: '' };
+      const row = document.createElement('div');
+      row.className = 'admin-contact';
+      row.innerHTML =
+        '<div class="admin-field">' +
+          '<span>Nombre del boton</span>' +
+          '<input type="text" name="contact-label" value="' + escapeHtml(contactData.label || '') + '" placeholder="Agente" />' +
+        '</div>' +
+        '<div class="admin-field">' +
+          '<span>Numero WhatsApp</span>' +
+          '<input type="text" name="contact-phone" value="' + escapeHtml(contactData.phone || '') + '" placeholder="573001234567" />' +
+        '</div>' +
+        '<div class="admin-field">' +
+          '<span>Texto visible</span>' +
+          '<input type="text" name="contact-display" value="' + escapeHtml(contactData.display || '') + '" placeholder="+57 300 123 4567" />' +
+        '</div>' +
+        '<div class="admin-contact-actions">' +
+          '<button type="button" data-action="remove-contact">Quitar</button>' +
+        '</div>';
+      return row;
+    }
+
+    function addContactRow(contactList, contact, options) {
+      if (!contactList) {
+        return;
+      }
+      if (contactList.querySelectorAll('.admin-contact').length >= MAX_CONTACTS) {
+        return;
+      }
+      const row = createContactRow(contact);
+      contactList.appendChild(row);
+      if (options && options.focus) {
+        const firstInput = row.querySelector('input[name="contact-label"]');
+        if (firstInput) {
+          firstInput.focus();
+        }
+      }
+      updateAddContactState();
+    }
+
+    function updateAddContactState() {
+      const contactList = document.getElementById('admin-contact-list');
+      const addButton = document.querySelector('.admin-add-contact[data-action="add-contact"]');
+      if (!addButton) {
+        return;
+      }
+      const count = contactList ? contactList.querySelectorAll('.admin-contact').length : 0;
+      const disabled = count >= MAX_CONTACTS;
+      addButton.disabled = disabled;
+      addButton.setAttribute('title', disabled ? 'Has alcanzado el limite de 10 contactos.' : 'Agregar numero');
+    }
+
+    function handleAdminPanelClick(event) {
+      const action = event.target && event.target.dataset ? event.target.dataset.action : null;
+      if (!action) {
+        return;
+      }
+
+      if (action === 'add-contact') {
+        event.preventDefault();
+        const contactList = document.getElementById('admin-contact-list');
+        addContactRow(contactList, { label: '', phone: '', display: '' }, { focus: true });
+      } else if (action === 'remove-contact') {
+        event.preventDefault();
+        const contactList = document.getElementById('admin-contact-list');
+        const row = event.target.closest('.admin-contact');
+        if (contactList && row) {
+          contactList.removeChild(row);
+          if (!contactList.querySelector('.admin-contact')) {
+            addContactRow(contactList, { label: '', phone: '', display: '' }, { focus: false });
+          }
+          updateAddContactState();
+        }
+      } else if (action === 'close-admin' || action === 'cancel-admin') {
+        event.preventDefault();
+        closeAdminModal();
+      } else if (action === 'reset-admin') {
+        event.preventDefault();
+        workingConfig = cloneDefaultConfig();
+        renderAdminForm(workingConfig);
+        const error = document.getElementById('admin-panel-error');
+        if (error) {
+          error.textContent = '';
+        }
+        updateAddContactState();
+      }
+    }
+
+    function handleAdminSave(event) {
+      event.preventDefault();
+      const panelError = document.getElementById('admin-panel-error');
+      if (panelError) {
+        panelError.textContent = '';
+      }
+
+      const messageField = document.getElementById('admin-prefill-message');
+      const messageValue = messageField && messageField.value.trim()
+        ? messageField.value.trim()
+        : DEFAULT_CONFIG.messageTemplate;
+
+      const contactList = document.getElementById('admin-contact-list');
+      if (!contactList) {
+        return;
+      }
+      const contactRows = Array.from(contactList.querySelectorAll('.admin-contact'));
+      const contacts = contactRows.map(row => {
+        const labelInput = row.querySelector('input[name="contact-label"]');
+        const phoneInput = row.querySelector('input[name="contact-phone"]');
+        const displayInput = row.querySelector('input[name="contact-display"]');
+
+        const label = labelInput && labelInput.value.trim() ? labelInput.value.trim() : 'Contacto';
+        const phoneRaw = phoneInput && phoneInput.value ? phoneInput.value : '';
+        const phone = phoneRaw.replace(/\D+/g, '');
+        const displayValue = displayInput && displayInput.value.trim() ? displayInput.value.trim() : '';
+
+        if (!phone) {
+          return null;
+        }
+
+        return {
+          label,
+          phone,
+          display: displayValue
+        };
+      }).filter(Boolean);
+
+      if (!contacts.length) {
+        if (panelError) {
+          panelError.textContent = 'Agrega al menos un numero valido antes de guardar.';
+        }
+        return;
+      }
+
+      appConfig = {
+        messageTemplate: messageValue,
+        contacts: contacts.slice(0, MAX_CONTACTS)
+      };
+      workingConfig = deepClone(appConfig);
+      saveConfig();
+      closeAdminModal();
+      renderSelectedCall();
+    }
+
+    function closeAdminModal() {
+      const overlay = document.getElementById('admin-overlay');
+      const login = document.getElementById('admin-login');
+      const panel = document.getElementById('admin-panel');
+      if (overlay) {
+        overlay.classList.add('hidden');
+      }
+      if (login) {
+        login.classList.add('hidden');
+      }
+      if (panel) {
+        panel.classList.add('hidden');
+      }
+      const loginForm = document.getElementById('admin-login-form');
+      if (loginForm) {
+        loginForm.reset();
+      }
+      const loginError = document.getElementById('admin-login-error');
+      if (loginError) {
+        loginError.textContent = '';
+      }
+      const panelError = document.getElementById('admin-panel-error');
+      if (panelError) {
+        panelError.textContent = '';
+      }
+    }
+  </script>
+</body>
+</html>
+
