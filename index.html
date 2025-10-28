@@ -459,7 +459,6 @@
   </div>
 
   <script>
-    const CONFIG_KEY = 'azarclub-config-v1';
     const ADMIN_USERNAME = 'admin';
     const ADMIN_PASSWORD = 'azarclub2024';
     const DEFAULT_CONFIG = {
@@ -473,10 +472,12 @@
     };
 
     const MAX_CONTACTS = 10;
+    const SITE_PREFIX = computeSitePrefix();
 
-    let appConfig = loadConfig();
+    let appConfig = cloneDefaultConfig();
     let workingConfig = null;
     let adminAuthenticated = false;
+    let adminCredentials = null;
     window.addEventListener('load', () => {
       setTimeout(() => {
         const loader = document.getElementById('loader');
@@ -498,6 +499,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       setupAdminControls();
       renderSelectedCall();
+      fetchRemoteConfig();
     });
 
     document.addEventListener('keydown', event => {
@@ -508,26 +510,6 @@
         }
       }
     });
-
-    function loadConfig() {
-      try {
-        const stored = localStorage.getItem(CONFIG_KEY);
-        if (stored) {
-          return normalizeConfig(JSON.parse(stored));
-        }
-      } catch (error) {
-        console.warn('No se pudo cargar la configuracion almacenada:', error);
-      }
-      return cloneDefaultConfig();
-    }
-
-    function saveConfig() {
-      try {
-        localStorage.setItem(CONFIG_KEY, JSON.stringify(appConfig));
-      } catch (error) {
-        console.warn('No se pudo guardar la configuracion:', error);
-      }
-    }
 
     function cloneDefaultConfig() {
       return deepClone(DEFAULT_CONFIG);
@@ -634,6 +616,40 @@
       );
     }
 
+    async function saveRemoteConfig(config) {
+      const normalizedContacts = normalizeContacts(config.contacts || []);
+      const payload = {
+        prefix: SITE_PREFIX,
+        messageTemplate: config.messageTemplate || '',
+        contacts: normalizedContacts
+      };
+
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+
+      if (adminCredentials && adminCredentials.username && adminCredentials.password) {
+        const authHeader = buildBasicAuthHeader(adminCredentials.username, adminCredentials.password);
+        if (authHeader) {
+          headers.Authorization = authHeader;
+        }
+      }
+
+      const response = await fetch('/api/config', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || `Error remoto ${response.status}`);
+      }
+
+      const result = await response.json();
+      return normalizeConfig(result);
+    }
+
     function getValidContacts() {
       if (!appConfig || !Array.isArray(appConfig.contacts)) {
         return [];
@@ -654,6 +670,15 @@
       return phone.startsWith('+') ? phone : '+' + phone;
     }
 
+    function buildBasicAuthHeader(username, password) {
+      try {
+        return 'Basic ' + btoa(`${username}:${password}`);
+      } catch (error) {
+        console.warn('No se pudo generar el encabezado de autenticacion:', error);
+        return undefined;
+      }
+    }
+
     function escapeHtml(value) {
       if (value === null || value === undefined) {
         return '';
@@ -664,6 +689,69 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+    }
+
+    function computeSitePrefix() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const paramValue = params.get('prefix') || params.get('site') || params.get('id');
+        if (paramValue) {
+          const slugged = slugify(paramValue);
+          if (slugged) {
+            return slugged;
+          }
+        }
+      } catch (error) {
+        console.warn('No se pudo leer el prefijo desde la URL:', error);
+      }
+
+      const host = (typeof window !== 'undefined' && window.location && window.location.hostname)
+        ? window.location.hostname
+        : 'default';
+      const path = (typeof window !== 'undefined' && window.location && window.location.pathname)
+        ? window.location.pathname.replace(/\/index\.html?$/i, '').replace(/^\//, '').replace(/\//g, '-')
+        : '';
+      const base = path ? `${host}-${path}` : host;
+      const fallback = slugify(base);
+      return fallback || 'default';
+    }
+
+    function slugify(value) {
+      if (value === null || value === undefined) {
+        return '';
+      }
+      let output = String(value).toLowerCase();
+      if (typeof output.normalize === 'function') {
+        output = output.normalize('NFD');
+      }
+      output = output.replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      return output;
+    }
+
+    async function fetchRemoteConfig() {
+      try {
+        const response = await fetch(`/api/config?prefix=${encodeURIComponent(SITE_PREFIX)}`, {
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (response.status === 404) {
+          appConfig = cloneDefaultConfig();
+          renderSelectedCall();
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const payload = await response.json();
+        if (payload) {
+          appConfig = normalizeConfig(payload);
+          renderSelectedCall();
+        }
+      } catch (error) {
+        console.warn('No se pudo sincronizar la configuracion remota:', error);
+      }
     }
 
     function setupAdminControls() {
@@ -722,6 +810,7 @@
       const error = document.getElementById('admin-login-error');
       if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
         adminAuthenticated = true;
+        adminCredentials = { username, password };
         if (error) {
           error.textContent = '';
         }
@@ -764,7 +853,9 @@
     }
 
     function renderAdminForm(source) {
-      const data = source && typeof source === 'object' ? source : workingConfig || cloneDefaultConfig();
+      const baseData = source && typeof source === 'object' ? source : workingConfig || cloneDefaultConfig();
+      const data = deepClone(baseData);
+      workingConfig = deepClone(data);
       const messageField = document.getElementById('admin-prefill-message');
       if (messageField) {
         messageField.value = data.messageTemplate || DEFAULT_CONFIG.messageTemplate;
@@ -885,7 +976,7 @@
       }
     }
 
-    function handleAdminSave(event) {
+    async function handleAdminSave(event) {
       event.preventDefault();
       const panelError = document.getElementById('admin-panel-error');
       if (panelError) {
@@ -930,14 +1021,23 @@
         return;
       }
 
-      appConfig = {
+      const nextConfig = {
         messageTemplate: messageValue,
         contacts: contacts.slice(0, MAX_CONTACTS)
       };
-      workingConfig = deepClone(appConfig);
-      saveConfig();
-      closeAdminModal();
-      renderSelectedCall();
+
+      try {
+        const remoteConfig = await saveRemoteConfig(nextConfig);
+        appConfig = remoteConfig;
+        workingConfig = deepClone(appConfig);
+        closeAdminModal();
+        renderSelectedCall();
+      } catch (error) {
+        console.error('Error al guardar la configuracion remota:', error);
+        if (panelError) {
+          panelError.textContent = 'No se pudo guardar la configuracion remota. Intenta nuevamente.';
+        }
+      }
     }
 
     function closeAdminModal() {
@@ -969,4 +1069,3 @@
   </script>
 </body>
 </html>
-
