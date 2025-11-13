@@ -765,15 +765,6 @@
         loginForm.addEventListener('submit', handleLoginSubmit);
       }
 
-      const overlay = document.getElementById('admin-overlay');
-      if (overlay) {
-        overlay.addEventListener('click', event => {
-          if (event.target === overlay) {
-            closeAdminModal();
-          }
-        });
-      }
-
       const panelForm = document.getElementById('admin-panel-form');
       if (panelForm) {
         panelForm.addEventListener('submit', handleAdminSave);
