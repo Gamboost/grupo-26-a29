@@ -458,6 +458,9 @@
     </div>
   </div>
 
+  <script src="/lib/fpixel.js" defer></script>
+  <script src="/scripts/FacebookPixel.js" defer></script>
+
   <script>
     const ADMIN_USERNAME = 'admin';
     const ADMIN_PASSWORD = '799002';
@@ -478,6 +481,14 @@
     let workingConfig = null;
     let adminAuthenticated = false;
     let adminCredentials = null;
+
+    function trackPixelEvent(name, payload) {
+      if (!window.pixel || typeof window.pixel.event !== 'function') {
+        return;
+      }
+      window.pixel.event(name, payload || {});
+    }
+
     window.addEventListener('load', () => {
       setTimeout(() => {
         const loader = document.getElementById('loader');
@@ -509,6 +520,23 @@
           closeAdminModal();
         }
       }
+    });
+
+    document.addEventListener('click', event => {
+      const target = event.target;
+      if (!target || typeof target.closest !== 'function') {
+        return;
+      }
+
+      const whatsappButton = target.closest('.whatsapp-button');
+      if (!whatsappButton) {
+        return;
+      }
+
+      trackPixelEvent('WhatsAppClick', {
+        label: whatsappButton.getAttribute('data-contact-label') || '',
+        phone: whatsappButton.getAttribute('data-contact-phone') || ''
+      });
     });
 
     function cloneDefaultConfig() {
@@ -596,7 +624,7 @@
         const label = contact.label && contact.label.trim() ? contact.label.trim() : 'Contacto';
         const message = encodeURIComponent(replaceCallPlaceholder(template, label));
         return (
-          '<a class="whatsapp-button" href="https://wa.me/' + cleanPhone + '?text=' + message + '" target="_blank" rel="noopener">' +
+          '<a class="whatsapp-button" data-contact-label="' + escapeHtml(label) + '" data-contact-phone="' + escapeHtml(cleanPhone) + '" href="https://wa.me/' + cleanPhone + '?text=' + message + '" target="_blank" rel="noopener">' +
             '<span class="button-label">' + escapeHtml(label) + '</span>' +
             '<span class="button-phone">' + escapeHtml(display) + '</span>' +
           '</a>'
@@ -773,6 +801,7 @@
     }
 
     function openAdminLogin() {
+      trackPixelEvent('AdminAccessOpen', { authenticated: adminAuthenticated });
       if (adminAuthenticated) {
         openAdminPanel();
         return;
@@ -802,11 +831,13 @@
       if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
         adminAuthenticated = true;
         adminCredentials = { username, password };
+        trackPixelEvent('AdminLoginSuccess');
         if (error) {
           error.textContent = '';
         }
         openAdminPanel();
       } else {
+        trackPixelEvent('AdminLoginFailed');
         if (error) {
           error.textContent = 'Credenciales invalidas.';
         }
@@ -941,12 +972,14 @@
         event.preventDefault();
         const contactList = document.getElementById('admin-contact-list');
         addContactRow(contactList, { label: '', phone: '', display: '' }, { focus: true });
+        trackPixelEvent('AdminContactAdded');
       } else if (action === 'remove-contact') {
         event.preventDefault();
         const contactList = document.getElementById('admin-contact-list');
         const row = event.target.closest('.admin-contact');
         if (contactList && row) {
           contactList.removeChild(row);
+          trackPixelEvent('AdminContactRemoved');
           if (!contactList.querySelector('.admin-contact')) {
             addContactRow(contactList, { label: '', phone: '', display: '' }, { focus: false });
           }
@@ -959,6 +992,7 @@
         event.preventDefault();
         workingConfig = cloneDefaultConfig();
         renderAdminForm(workingConfig);
+        trackPixelEvent('AdminConfigReset');
         const error = document.getElementById('admin-panel-error');
         if (error) {
           error.textContent = '';
@@ -1021,10 +1055,12 @@
         const remoteConfig = await saveRemoteConfig(nextConfig);
         appConfig = remoteConfig;
         workingConfig = deepClone(appConfig);
+        trackPixelEvent('AdminConfigSaved', { contactsCount: appConfig.contacts.length });
         closeAdminModal();
         renderSelectedCall();
       } catch (error) {
         console.error('Error al guardar la configuracion remota:', error);
+        trackPixelEvent('AdminConfigSaveFailed');
         if (panelError) {
           panelError.textContent = 'No se pudo guardar la configuracion remota. Intenta nuevamente.';
         }
