@@ -392,6 +392,16 @@
   </style>
 </head>
 <body>
+  <noscript>
+    <img
+      height="1"
+      width="1"
+      style="display:none"
+      src="/api/pixel-noscript"
+      alt=""
+    />
+  </noscript>
+
   <div id="loader">
     <div class="spinner"></div>
     <p>Cargando Azarclub...</p>
@@ -458,8 +468,8 @@
     </div>
   </div>
 
-  <script src="/lib/fpixel.js" defer></script>
-  <script src="/scripts/FacebookPixel.js" defer></script>
+  <script src="/lib/fpixel.js"></script>
+  <script src="/api/pixel-script.js"></script>
 
   <script>
     const ADMIN_USERNAME = 'admin';
@@ -483,10 +493,13 @@
     let adminCredentials = null;
 
     function trackPixelEvent(name, payload) {
-      if (!window.pixel || typeof window.pixel.event !== 'function') {
+      if (window.pixel && typeof window.pixel.event === 'function') {
+        window.pixel.event(name, payload || {});
         return;
       }
-      window.pixel.event(name, payload || {});
+      if (typeof window.fbq === 'function') {
+        window.fbq('track', name, payload || {});
+      }
     }
 
     window.addEventListener('load', () => {
