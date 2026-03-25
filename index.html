@@ -654,7 +654,7 @@
         const label = contact.label && contact.label.trim() ? contact.label.trim() : 'Contacto';
         const message = encodeURIComponent(replaceCallPlaceholder(template, label));
         return (
-          '<a class="whatsapp-button" data-contact-label="' + escapeHtml(label) + '" data-contact-phone="' + escapeHtml(cleanPhone) + '" href="https://t.me/' + cleanPhone + '?text=' + message + '" target="_blank" rel="noopener">' +
+          '<a class="whatsapp-button" data-contact-label="' + escapeHtml(label) + '" data-contact-phone="' + escapeHtml(cleanPhone) + '" href="https://t.me/azarlatino" + cleanPhone + '?text=' + message + '" target="_blank" rel="noopener">' +
             '<span class="button-label">' + escapeHtml(label) + '</span>' +
             '<span class="button-phone">' + escapeHtml(display) + '</span>' +
           '</a>'
