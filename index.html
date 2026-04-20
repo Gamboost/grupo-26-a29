@@ -678,30 +678,7 @@ setTimeout(function() {
     </a>
   `;
 }
-        const display = contact.display && contact.display.trim()
-          ? contact.display.trim()
-          : formatPhone(cleanPhone);
-        const label = contact.label && contact.label.trim() ? contact.label.trim() : 'Contacto';
-        const message = encodeURIComponent(replaceCallPlaceholder(template, label));
-        return (
-          '<a class="whatsapp-button" data-contact-label="' + escapeHtml(label) + '" data-contact-phone="' + escapeHtml(cleanPhone) + '" href="https://t.me/azarlatino" target="_blank" rel="noopener">' +
-            '<span class="button-label">' + escapeHtml(label) + '</span>' +
-            '<span class="button-phone">' + escapeHtml(display) + '</span>' +
-          '</a>'
-        );
-      }).filter(Boolean).join('');
-
-      if (!buttonsHtml) {
-        return '<div class="call-card"><p class="empty-state">Agrega numeros desde la configuracion administrativa.</p></div>';
-      }
-
-      return (
-        '<div class="call-card">' +
-          '<div class="button-grid">' +
-            buttonsHtml +
-          '</div>' +
-        '</div>'
-      );
+     
     }
 
     async function saveRemoteConfig(config) {
