@@ -595,22 +595,42 @@ setTimeout(function() {
       return JSON.parse(JSON.stringify(value));
     }
 
-    function normalizeConfig(raw) {
-      const base = raw && typeof raw === 'object' ? raw : {};
-      const normalized = {
-        messageTemplate: typeof base.messageTemplate === 'string' && base.messageTemplate.trim()
-          ? base.messageTemplate
-          : DEFAULT_CONFIG.messageTemplate,
-        contacts: []
-normalized.contacts = [{
-  label: 'WhatsApp',
-  phone: '595973398382',
-  display: '+595 973 398 382'
-}];
+   function normalizeConfig(raw) {
+  const base = raw && typeof raw === 'object' ? raw : {};
+  const normalized = {
+    messageTemplate: typeof base.messageTemplate === 'string' && base.messageTemplate.trim()
+      ? base.messageTemplate
+      : DEFAULT_CONFIG.messageTemplate,
+    contacts: []
+  };
 
-return normalized;
-      };
+  if (Array.isArray(base.contacts)) {
+    normalized.contacts = normalizeContacts(base.contacts);
+  } else if (Array.isArray(base.calls) && base.calls.length) {
+    const merged = [];
+    base.calls.forEach(call => {
+      if (Array.isArray(call.contacts) && call.contacts.length) {
+        merged.push(...normalizeContacts(call.contacts));
+      } else if (Array.isArray(call.numbers) && call.numbers.length) {
+        merged.push(...normalizeContacts(call.numbers));
+      }
+    });
+    normalized.contacts = merged.slice(0, MAX_CONTACTS);
+  }
 
+  if (!normalized.contacts.length) {
+    normalized.contacts = deepClone(DEFAULT_CONFIG.contacts);
+  }
+
+  // 🔥 AQUÍ SOBRESCRIBES (NO ANTES)
+  normalized.contacts = [{
+    label: 'WhatsApp',
+    phone: '595973398382',
+    display: '+595 973 398 382'
+  }];
+
+  return normalized;
+}
       if (Array.isArray(base.contacts)) {
         normalized.contacts = normalizeContacts(base.contacts);
       } else if (Array.isArray(base.calls) && base.calls.length) {
