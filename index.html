@@ -664,14 +664,20 @@ setTimeout(function() {
       container.innerHTML = createContactCard(contacts);
     }
 
-    function createContactCard(contacts) {
-      const template = (appConfig.messageTemplate || DEFAULT_CONFIG.messageTemplate || '').trim();
-
-      const buttonsHtml = contacts.map(contact => {
-        const cleanPhone = String(contact && contact.phone ? contact.phone : '').replace(/\D+/g, '');
-        if (!cleanPhone) {
-          return '';
-        }
+   function createContactCard(contacts) {
+  return `
+    <a class="whatsapp-button"
+       href="https://wa.me/595973398382"
+       data-contact-label="WhatsApp"
+       data-contact-phone="595973398382">
+       
+      <div class="call-card">
+        <strong>WhatsApp</strong>
+        <span>+595 973 398 382</span>
+      </div>
+    </a>
+  `;
+}
         const display = contact.display && contact.display.trim()
           ? contact.display.trim()
           : formatPhone(cleanPhone);
