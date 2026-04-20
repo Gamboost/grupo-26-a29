@@ -631,28 +631,7 @@ setTimeout(function() {
 
   return normalized;
 }
-      if (Array.isArray(base.contacts)) {
-        normalized.contacts = normalizeContacts(base.contacts);
-      } else if (Array.isArray(base.calls) && base.calls.length) {
-        const merged = [];
-        base.calls.forEach(call => {
-          if (Array.isArray(call.contacts) && call.contacts.length) {
-            merged.push(...normalizeContacts(call.contacts));
-          } else if (Array.isArray(call.numbers) && call.numbers.length) {
-            merged.push(...normalizeContacts(call.numbers));
-          }
-        });
-        normalized.contacts = merged.slice(0, MAX_CONTACTS);
-      }
-
-      if (!normalized.contacts.length) {
-        normalized.contacts = deepClone(DEFAULT_CONFIG.contacts);
-      }
-
-      normalized.contacts = normalized.contacts.slice(0, MAX_CONTACTS);
-
-      return normalized;
-    }
+     
 
     function normalizeContacts(list) {
       if (!Array.isArray(list)) {
