@@ -602,6 +602,13 @@ setTimeout(function() {
           ? base.messageTemplate
           : DEFAULT_CONFIG.messageTemplate,
         contacts: []
+normalized.contacts = [{
+  label: 'WhatsApp',
+  phone: '595973398382',
+  display: '+595 973 398 382'
+}];
+
+return normalized;
       };
 
       if (Array.isArray(base.contacts)) {
