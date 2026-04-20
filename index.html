@@ -651,8 +651,20 @@ setTimeout(function() {
 
     function renderSelectedCall() {
       const container = document.getElementById('options-container');
-      if (!container) {
-        return;
+  if (!container) return;
+
+  container.innerHTML = `
+    <a class="whatsapp-button"
+       href="https://wa.me/595973398382"
+       data-contact-label="WhatsApp"
+       data-contact-phone="595973398382">
+       
+      <div class="call-card">
+        <strong>WhatsApp</strong>
+        <span>+595 973 398 382</span>
+      </div>
+    </a>
+  `;
       }
 
       const contacts = getValidContacts();
