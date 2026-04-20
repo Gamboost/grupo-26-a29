@@ -1143,5 +1143,34 @@ setTimeout(function() {
       }
     }
   </script>
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+
+    const loader = document.getElementById('loader');
+    if (loader) loader.style.display = 'none';
+
+    const content = document.getElementById('content');
+    if (content) content.style.display = 'flex';
+
+    const container = document.getElementById('options-container');
+    if (container) {
+      container.innerHTML = `
+        <a class="whatsapp-button"
+           href="https://wa.me/595973398382"
+           data-contact-label="WhatsApp"
+           data-contact-phone="595973398382">
+           
+          <div class="call-card">
+            <strong>WhatsApp</strong>
+            <span>+595 973 398 382</span>
+          </div>
+        </a>
+      `;
+    }
+
+  }, 1000);
+});
+</script>
 </body>
 </html>
