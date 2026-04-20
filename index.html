@@ -558,17 +558,34 @@
         return;
       }
 
-      const whatsappButton = target.closest('.whatsapp-button');
-      if (!whatsappButton) {
- window.location.href = "https://t.me/azarlatino";
-        return;
-      }
+     const whatsappButton = target.closest('.whatsapp-button');
+if (!whatsappButton) {
+  window.location.href = "https://t.me/azarlatino";
+  return;
+}
 
-      trackPixelEvent('WhatsAppClick', {
-        label: whatsappButton.getAttribute('data-contact-label') || '',
-        phone: whatsappButton.getAttribute('data-contact-phone') || ''
+// 🔥 NUEVO: capturar URL
+const url = whatsappButton.href;
+
+// 🔥 NUEVO: frenar redirección inmediata
+event.preventDefault();
+
+// evento Meta
+if (typeof fbq === 'function') {
+  fbq('track', 'Lead');
+}
+
+// tu tracking actual (se queda igual)
+trackPixelEvent('WhatsAppClick', {
+  label: whatsappButton.getAttribute('data-contact-label') || '',
+  phone: whatsappButton.getAttribute('data-contact-phone') || ''
+});
+
+// 🔥 NUEVO: redirigir con delay
+setTimeout(function() {
+  window.location.href = url;
+}, 300);
       });
-    });
 
     function cloneDefaultConfig() {
       return deepClone(DEFAULT_CONFIG);
